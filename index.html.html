@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Entrenamiento 2 Meses</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f2f2f7}
+        .app{max-width:450px;margin:0 auto;background:#fff;min-height:100vh;box-shadow:0 0 20px rgba(0,0,0,0.1)}
+        .header{background:#185fa5;color:#fff;padding:20px;text-align:center}
+        .header h1{font-size:1.5rem}
+        .header p{font-size:0.8rem;opacity:0.8}
+        .nav{display:flex;background:#fff;border-bottom:1px solid #e5e5ea}
+        .nav button{flex:1;padding:12px;background:none;border:none;font-size:1rem;font-weight:500;cursor:pointer;color:#6c6c70;transition:0.2s}
+        .nav button.active{color:#185fa5;border-bottom:2px solid #185fa5}
+        .page{display:none;padding:16px}
+        .page.active{display:block}
+        .week-selector{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+        .week-label{font-weight:bold;font-size:1.2rem}
+        .week-phase{background:#e6f1fb;color:#185fa5;padding:4px 12px;border-radius:20px;font-size:0.8rem}
+        .week-nav{display:flex;gap:8px}
+        .week-btn{background:#fff;border:1px solid #d1d1d6;border-radius:8px;width:36px;height:36px;font-size:1.2rem;cursor:pointer}
+        .day-tabs{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px}
+        .day-tab{background:#f5f5f5;padding:6px 16px;border-radius:30px;font-size:0.8rem;font-weight:500;cursor:pointer;border:1px solid #e5e5ea}
+        .day-tab.active-sup{background:#e6f1fb;color:#185fa5;border-color:#b5d4f4}
+        .day-tab.active-inf{background:#eaf3de;color:#3b6d11;border-color:#c0dd97}
+        .day-tab.done{position:relative;padding-right:24px}
+        .day-tab.done::after{content:"✓";position:absolute;top:-4px;right:-2px;background:#639922;color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:flex;align-items:center;justify-content:center}
+        .progress-bar{height:4px;background:#e5e5ea;border-radius:4px;margin-bottom:20px}
+        .progress-fill{height:100%;background:#185fa5;border-radius:4px;width:0%}
+        .tipo-badge{display:inline-block;padding:4px 12px;border-radius:30px;font-size:0.8rem;margin-bottom:16px}
+        .tipo-sup{background:#e6f1fb;color:#185fa5}
+        .tipo-inf{background:#eaf3de;color:#3b6d11}
+        .ex-card{border:1px solid #e5e5ea;border-radius:12px;margin-bottom:12px;background:#fff}
+        .ex-card.completed{opacity:0.6}
+        .ex-header{display:flex;align-items:center;gap:12px;padding:12px;cursor:pointer}
+        .ex-check{width:24px;height:24px;border-radius:50%;border:2px solid #d1d1d6;display:flex;align-items:center;justify-content:center}
+        .ex-check.done{background:#639922;border-color:#639922;color:#fff}
+        .ex-name{font-weight:500;flex:1}
+        .ex-chips{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+        .chip{background:#f5f5f5;padding:2px 8px;border-radius:12px;font-size:0.7rem}
+        .ex-expand{font-size:1.2rem}
+        .ex-body{display:none;padding:12px;border-top:1px solid #e5e5ea}
+        .ex-body.open{display:block}
+        .ex-desc{font-size:0.8rem;color:#6c6c70;margin-bottom:12px}
+        .timer-row{display:flex;gap:8px;margin:12px 0}
+        .timer-box{background:#f5f5f5;border-radius:8px;padding:8px;text-align:center;flex:1}
+        .timer-box .val{font-weight:bold;font-size:1.1rem}
+        .timer-box .lbl{font-size:0.7rem}
+        .start-btn{background:#185fa5;color:#fff;border:none;border-radius:8px;padding:10px;width:100%;font-weight:bold;cursor:pointer;margin-top:8px}
+        .cinta-card{background:#f3e8ff;border:1px solid #d8b4fe;border-radius:12px;padding:12px;margin-bottom:16px}
+        .timer-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+        .timer-overlay.visible{display:flex}
+        .timer-name{color:#fff;font-size:1.5rem;margin-bottom:8px}
+        .timer-phase{color:#ccc;margin-bottom:24px}
+        .timer-circle{width:200px;height:200px;position:relative}
+        .timer-num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:3rem;font-weight:bold}
+        .timer-series{color:#fff;margin-top:24px}
+        .timer-btns{display:flex;gap:12px;margin-top:32px}
+        .tbtn{background:transparent;border:1px solid #fff;color:#fff;padding:8px 20px;border-radius:8px;cursor:pointer}
+        .tbtn.primary{background:#185fa5;border-color:#185fa5}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+        .stat-card{background:#f5f5f5;border-radius:12px;padding:12px;text-align:center}
+        .stat-val{font-size:1.8rem;font-weight:bold}
+        .week-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        .week-card{border:1px solid #e5e5ea;border-radius:12px;padding:12px;cursor:pointer}
+        .week-card.current{border-color:#185fa5;border-width:2px}
+        .sound-test{background:#6b21a8;color:#fff;border:none;border-radius:20px;padding:4px 12px;margin-left:8px;cursor:pointer}
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <h1>💪 Plan 2 meses</h1>
+        <p>Lun–Vie · Tiempos progresivos · Descanso variable</p>
+    </div>
+    <div class="nav">
+        <button class="active" onclick="showPage('entrenar')">🏋️ Entrenar</button>
+        <button onclick="showPage('plan')">📅 Plan</button>
+        <button onclick="showPage('progreso')">📊 Progreso</button>
+    </div>
+    <div id="page-entrenar" class="page active"></div>
+    <div id="page-plan" class="page"></div>
+    <div id="page-progreso" class="page"></div>
+</div>
+<div class="timer-overlay" id="timerOverlay">
+    <div class="timer-name" id="timerName"></div>
+    <div class="timer-phase" id="timerPhase"></div>
+    <div class="timer-circle">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="88" fill="none" stroke="#555" stroke-width="8"/>
+            <circle id="timerArc" cx="100" cy="100" r="88" fill="none" stroke="#185fa5" stroke-width="8" stroke-dasharray="553" stroke-dashoffset="0" transform="rotate(-90 100 100)"/>
+        </svg>
+        <div class="timer-num" id="timerNum">0</div>
+    </div>
+    <div class="timer-series" id="timerSeries"></div>
+    <div class="timer-btns">
+        <button class="tbtn" onclick="skipTimer()">Saltar</button>
+        <button class="tbtn primary" id="pauseBtn" onclick="pauseTimer()">Pausar</button>
+        <button class="tbtn" onclick="closeTimer()">Cerrar</button>
+    </div>
+</div>
+<script>
+// --------------------------------------------------------------
+// DATOS DEL PLAN (estructura simple)
+// --------------------------------------------------------------
+const EXERCISES_BY_WEEK = {
+    sup: {
+        1: ["Saltar la soga","Flexiones de brazos","Plancha frontal","Fondos entre sillas","Curl de bíceps","Crunches","Dominadas en barra"],
+        3: ["Saltar la soga","Flexiones de brazos","Flexiones inclinadas","Plancha frontal","Plancha lateral","Dominadas","Press de hombro","Crunches"],
+        5: ["Saltar la soga","Flexiones de brazos","Flexiones declinadas","Fondos","Remo con mancuernas","Elevaciones laterales","Plancha frontal","Dominadas"],
+        7: ["Saltar la soga","Flexiones de brazos","Flexiones declinadas","Fondos","Remo con mancuernas","Press de hombro","Elevaciones laterales","Plancha frontal","Plancha lateral","Dominadas"]
+    },
+    inf: {
+        1: ["Sentadilla libre","Estocadas alternadas","Puente de glúteos","Elevación de gemelos","Step-ups"],
+        3: ["Sentadilla libre","Sentadilla sumo","Estocadas caminando","Puente de glúteos","Peso muerto rumano","Elevación de gemelos"],
+        5: ["Sentadilla libre","Sentadilla búlgara","Estocadas caminando","Puente de glúteos","Peso muerto rumano","Sentadillas con salto","Elevación de gemelos"],
+        7: ["Sentadilla libre","Sentadilla búlgara","Estocadas caminando","Puente de glúteos","Peso muerto rumano","Sentadillas con salto","Elevación de gemelos","Step-ups"]
+    }
+};
+
+function getWorkTime(week, exercise) {
+    if (week <= 2) return exercise.includes("Dominadas") ? 18 : 20;
+    if (week <= 4) return exercise.includes("Dominadas") ? 25 : 28;
+    if (week <= 6) return exercise.includes("Dominadas") ? 32 : 35;
+    return exercise.includes("Dominadas") ? 38 : 42;
+}
+
+function getRestTime(week) {
+    if (week <= 2) return 24;
+    if (week <= 4) return 22;
+    if (week <= 6) return 20;
+    return 19;
+}
+
+function getDayExercises(week, dayIdx) {
+    const tipo = ["SUP","INF","SUP","INF","SUP"][dayIdx];
+    const weekKey = week <= 2 ? 1 : (week <= 4 ? 3 : (week <= 6 ? 5 : 7));
+    const baseNames = EXERCISES_BY_WEEK[tipo.toLowerCase()][weekKey];
+    const rest = getRestTime(week);
+    let exs = [["Movilidad articular", 1, 120, rest]];
+    if (week >= 6) exs.push(["Activación", 1, 120, rest]);
+    for (let name of baseNames) {
+        exs.push([name, 4, getWorkTime(week, name), rest]);
+    }
+    return exs;
+}
+
+// --------------------------------------------------------------
+// INFO DESCRIPTIVA
+// --------------------------------------------------------------
+const EX_INFO = {
+    "Movilidad articular": "Movimientos suaves: cuello, hombros, cadera, tobillos.",
+    "Activación": "Ejercicios dinámicos: jumping jacks, skipping, rodillas al pecho.",
+    "Saltar la soga": "Saltos continuos, ritmo constante.",
+    "Flexiones de brazos": "Manos al ancho hombros, cuerpo recto.",
+    "Plancha frontal": "Apoyo antebrazos, cuerpo recto, activa core.",
+    "Fondos entre sillas": "Manos en silla, bajar y subir.",
+    "Curl de bíceps": "Codos fijos, flexionar con mancuernas.",
+    "Crunches": "Elevar hombros, exhalar al subir.",
+    "Dominadas en barra": "Agarrar barra, subir hasta barbilla.",
+    "Flexiones inclinadas": "Manos en silla, más fácil.",
+    "Plancha lateral": "Apoyo en un antebrazo, lateral.",
+    "Dominadas": "Mismo ejercicio de dominadas.",
+    "Press de hombro": "Empujar mancuernas arriba.",
+    "Flexiones declinadas": "Pies en silla, más difícil.",
+    "Fondos": "Fondos entre sillas.",
+    "Remo con mancuernas": "Apoyar rodilla, tirar hacia cadera.",
+    "Elevaciones laterales": "Subir brazos a los lados.",
+    "Sentadilla libre": "Bajar como sentarse.",
+    "Estocadas alternadas": "Paso adelante, rodilla trasera casi toca suelo.",
+    "Puente de glúteos": "Empujar cadera arriba.",
+    "Elevación de gemelos": "Subir en puntas de pies.",
+    "Step-ups": "Subir a silla alternando piernas.",
+    "Sentadilla sumo": "Pies anchos, puntas afuera.",
+    "Estocadas caminando": "Avanzar con estocadas.",
+    "Peso muerto rumano": "Inclinar tronco, bajar mancuernas.",
+    "Sentadillas con salto": "Salto explosivo al subir.",
+    "Sentadilla búlgara": "Pie trasero en silla."
+};
+
+// --------------------------------------------------------------
+// ESTADO Y UTILS
+// --------------------------------------------------------------
+let state = {
+    week: 1,
+    day: 0,
+    completed: {},
+    expandedEx: null
+};
+
+function saveState() {
+    localStorage.setItem("entrenamiento_app", JSON.stringify({
+        week: state.week,
+        day: state.day,
+        completed: state.completed
+    }));
+}
+
+function loadState() {
+    let saved = localStorage.getItem("entrenamiento_app");
+    if (saved) {
+        try {
+            let data = JSON.parse(saved);
+            state.week = data.week || 1;
+            state.day = data.day || 0;
+            state.completed = data.completed || {};
+        } catch(e) {}
+    }
+}
+
+function getExKey(week, day, idx) { return `${week}-${day}-${idx}`; }
+
+function renderEntrenar() {
+    let html = `<div class="week-selector">
+        <div><span class="week-label">Semana ${state.week}</span> <span class="week-phase">${state.week<=2?"Adaptación":state.week<=4?"Volumen":state.week<=6?"Intensificación":"Pico"} · Descanso ${getRestTime(state.week)}s</span></div>
+        <div class="week-nav">
+            <button class="week-btn" onclick="changeWeek(-1)" ${state.week===1?"disabled":""}>‹</button>
+            <button class="week-btn" onclick="changeWeek(1)" ${state.week===8?"disabled":""}>›</button>
+            <button class="sound-test" onclick="testSound()">🔊 Probar</button>
+        </div>
+    </div>`;
+    
+    // Días
+    html += `<div class="day-tabs">`;
+    for (let i=0; i<5; i++) {
+        let dia = ["LUN","MAR","MIÉ","JUE","VIE"][i];
+        let tipoClase = i===state.day ? (i%2===0?"active-sup":"active-inf") : "";
+        let exsDia = getDayExercises(state.week, i);
+        let doneCount = exsDia.filter((_,idx)=>state.completed[getExKey(state.week,i,idx)]).length;
+        let allDone = doneCount === exsDia.length;
+        html += `<div class="day-tab ${tipoClase} ${allDone?'done':''}" onclick="changeDay(${i})">${dia}</div>`;
+    }
+    html += `</div>`;
+    
+    // Progreso día
+    let exercises = getDayExercises(state.week, state.day);
+    let total = exercises.length;
+    let done = exercises.filter((_,i)=>state.completed[getExKey(state.week,state.day,i)]).length;
+    let percent = total? Math.round(done/total*100):0;
+    html += `<div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>`;
+    
+    let tipoEntreno = state.day%2===0?"SUP":"INF";
+    html += `<div class="tipo-badge tipo-${tipoEntreno==="SUP"?"sup":"inf"}">${tipoEntreno==="SUP"?"💪 Tren Superior":"🦵 Tren Inferior"}</div>`;
+    
+    // Cinta (viernes semanas pares)
+    if (state.day===4 && (state.week===2 || state.week===4 || state.week===6 || state.week===8)) {
+        let cintaKey = getExKey(state.week,state.day,99);
+        let cintaDone = state.completed[cintaKey];
+        html += `<div class="cinta-card"><div class="cinta-title">🏃‍♂️ Sesión Cinta</div><div class="cinta-desc">Calentamiento 3min · Trote 12min · Intervalo 2min · Enfriamiento 1min</div><button class="start-btn" style="background:#6b21a8" onclick="markCinta()">${cintaDone?"✓ Completada":"🎯 Marcar como hecha"}</button></div>`;
+    }
+    
+    // Ejercicios
+    exercises.forEach((ex, idx) => {
+        let [name, series, work, rest] = ex;
+        let key = getExKey(state.week, state.day, idx);
+        let doneEx = state.completed[key];
+        let expanded = state.expandedEx === key;
+        html += `<div class="ex-card ${doneEx?'completed':''}">
+            <div class="ex-header" onclick="toggleEx('${key}')">
+                <div class="ex-check ${doneEx?'done':''}" onclick="event.stopPropagation();toggleDone('${key}')">${doneEx?'✓':''}</div>
+                <div class="ex-name">${name}</div>
+                <div class="ex-expand">${expanded?'▲':'▼'}</div>
+            </div>
+            <div class="ex-body ${expanded?'open':''}">
+                <div class="ex-desc">📘 ${EX_INFO[name] || "Realiza con buena técnica."}</div>
+                <div class="timer-row">
+                    <div class="timer-box"><div class="val">${work}s</div><div class="lbl">Trabajo</div></div>
+                    <div class="timer-box"><div class="val">${rest}s</div><div class="lbl">Descanso</div></div>
+                    <div class="timer-box"><div class="val">${series}</div><div class="lbl">Series</div></div>
+                </div>
+                <button class="start-btn" onclick="startTimer('${name}',${series},${work},${rest},${idx})">⏱️ Iniciar timer</button>
+            </div>
+        </div>`;
+    });
+    document.getElementById("page-entrenar").innerHTML = html;
+}
+
+function renderPlan() {
+    let total = 0, completados = 0;
+    for (let w=1; w<=8; w++) {
+        for (let d=0; d<5; d++) {
+            let exs = getDayExercises(w,d);
+            total += exs.length;
+            completados += exs.filter((_,i)=>state.completed[getExKey(w,d,i)]).length;
+        }
+    }
+    let html = `<div class="stats-grid">
+        <div class="stat-card"><div class="stat-val">${completados}</div><div>Ejercicios hechos</div></div>
+        <div class="stat-card"><div class="stat-val">Semana ${state.week}</div><div>Actual</div></div>
+    </div><div class="week-grid">`;
+    for (let w=1; w<=8; w++) {
+        let weekTotal = 0, weekDone = 0;
+        for (let d=0; d<5; d++) {
+            let exs = getDayExercises(w,d);
+            weekTotal += exs.length;
+            weekDone += exs.filter((_,i)=>state.completed[getExKey(w,d,i)]).length;
+        }
+        let pct = weekTotal? Math.round(weekDone/weekTotal*100):0;
+        html += `<div class="week-card ${w===state.week?'current':''}" onclick="goWeek(${w})">
+            <div><strong>Semana ${w}</strong> <span style="font-size:0.8rem;">${pct}%</span></div>
+            <div class="wprogress"><div class="wpfill" style="width:${pct}%"></div></div>
+        </div>`;
+    }
+    html += `</div>`;
+    document.getElementById("page-plan").innerHTML = html;
+}
+
+function renderProgreso() {
+    let total = 0, completados = 0;
+    for (let w=1; w<=8; w++) {
+        for (let d=0; d<5; d++) {
+            let exs = getDayExercises(w,d);
+            total += exs.length;
+            completados += exs.filter((_,i)=>state.completed[getExKey(w,d,i)]).length;
+        }
+    }
+    let pct = Math.round(completados/total*100);
+    let html = `<div class="stats-grid">
+        <div class="stat-card"><div class="stat-val">${completados}</div><div>Ejercicios</div></div>
+        <div class="stat-card"><div class="stat-val">${pct}%</div><div>Completado</div></div>
+    </div>`;
+    for (let w=1; w<=8; w++) {
+        let weekHtml = `<div><strong>Semana ${w}</strong> `;
+        for (let d=0; d<5; d++) {
+            let exs = getDayExercises(w,d);
+            let done = exs.filter((_,i)=>state.completed[getExKey(w,d,i)]).length;
+            let color = done===exs.length ? "#639922" : (done>0 ? "#185fa5" : "#e5e5ea");
+            weekHtml += `<span style="display:inline-block;width:30px;height:12px;background:${color};border-radius:4px;margin:0 2px;"></span>`;
+        }
+        weekHtml += `</div>`;
+        html += weekHtml;
+    }
+    document.getElementById("page-progreso").innerHTML = html;
+}
+
+// --------------------------------------------------------------
+// NAVEGACIÓN
+// --------------------------------------------------------------
+function showPage(page) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".nav button").forEach(btn => btn.classList.remove("active"));
+    document.getElementById(`page-${page}`).classList.add("active");
+    if (page === "entrenar") renderEntrenar();
+    if (page === "plan") renderPlan();
+    if (page === "progreso") renderProgreso();
+    document.querySelector(`.nav button:nth-child(${page==="entrenar"?1:page==="plan"?2:3})`).classList.add("active");
+}
+function changeWeek(delta) { state.week = Math.min(8, Math.max(1, state.week+delta)); renderEntrenar(); saveState(); }
+function changeDay(d) { state.day = d; renderEntrenar(); saveState(); }
+function goWeek(w) { state.week = w; showPage("entrenar"); }
+function toggleEx(key) { state.expandedEx = state.expandedEx===key ? null : key; renderEntrenar(); }
+function toggleDone(key) { if(state.completed[key]) delete state.completed[key]; else state.completed[key]=true; renderEntrenar(); saveState(); }
+function markCinta() { let key = getExKey(state.week,state.day,99); if(state.completed[key]) delete state.completed[key]; else state.completed[key]=true; renderEntrenar(); saveState(); }
+
+// --------------------------------------------------------------
+// SONIDOS (contexto único)
+// --------------------------------------------------------------
+let audioCtx = null;
+async function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") await audioCtx.resume();
+    return audioCtx;
+}
+async function playTone(freq, dur, vol=0.3) {
+    let ctx = await initAudio();
+    if (!ctx) return;
+    let osc = ctx.createOscillator();
+    let gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    gain.gain.value = vol;
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + dur);
+    osc.stop(ctx.currentTime + dur);
+}
+async function playBell() { await playTone(1046.5, 0.25); setTimeout(()=>playTone(880,0.3), 200); }
+async function playRest() { await playTone(880, 0.12, 0.35); }
+async function playEnd() { let ctx = await initAudio(); if(!ctx) return; let osc = ctx.createOscillator(); let gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.frequency.value = 880; gain.gain.value = 0.35; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.5); osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime+0.5); osc.stop(ctx.currentTime+0.5); }
+async function testSound() { await initAudio(); playBell(); setTimeout(playRest,800); setTimeout(playEnd,1400); }
+
+// --------------------------------------------------------------
+// TEMPORIZADOR
+// --------------------------------------------------------------
+let timer = null, timerState = null, paused = false;
+function startTimer(name, series, work, rest, idx) {
+    if (timer) clearInterval(timer);
+    initAudio().then(() => {
+        timerState = { name, series, work, rest, idx, currentSerie: 1, phase: "work", remaining: work };
+        paused = false;
+        document.getElementById("timerOverlay").classList.add("visible");
+        document.getElementById("pauseBtn").textContent = "Pausar";
+        updateTimerDisplay();
+        playBell();
+        timer = setInterval(() => {
+            if (paused) return;
+            if (timerState.remaining <= 0) {
+                if (timerState.phase === "work") {
+                    if (timerState.currentSerie < timerState.series) {
+                        timerState.phase = "rest";
+                        timerState.remaining = timerState.rest;
+                        playRest();
+                    } else {
+                        finishExercise();
+                        return;
+                    }
+                } else if (timerState.phase === "rest") {
+                    timerState.currentSerie++;
+                    timerState.phase = "work";
+                    timerState.remaining = timerState.work;
+                    playBell();
+                }
+                updateTimerDisplay();
+            } else {
+                timerState.remaining--;
+                updateTimerDisplay();
+            }
+        }, 1000);
+    });
+}
+function updateTimerDisplay() {
+    document.getElementById("timerName").textContent = timerState.name;
+    document.getElementById("timerPhase").textContent = timerState.phase === "work" ? "💪 Trabajo" : "⏸️ Descanso";
+    document.getElementById("timerNum").textContent = timerState.remaining;
+    if (timerState.phase === "work") document.getElementById("timerSeries").textContent = `Serie ${timerState.currentSerie} de ${timerState.series}`;
+    else document.getElementById("timerSeries").textContent = `Descanso ${timerState.remaining}s · Siguiente serie`;
+    let pct = timerState.remaining / (timerState.phase==="work"?timerState.work:timerState.rest);
+    let circ = 2*Math.PI*88;
+    let offset = circ * (1-pct);
+    document.getElementById("timerArc").setAttribute("stroke-dashoffset", offset);
+}
+function finishExercise() {
+    clearInterval(timer);
+    playEnd();
+    let key = getExKey(state.week, state.day, timerState.idx);
+    if (!state.completed[key]) state.completed[key] = true;
+    saveState();
+    let exercises = getDayExercises(state.week, state.day);
+    let nextIdx = -1;
+    for (let i = timerState.idx+1; i < exercises.length; i++) {
+        if (!state.completed[getExKey(state.week, state.day, i)]) { nextIdx = i; break; }
+    }
+    if (nextIdx !== -1) {
+        let [name, series, work, rest] = exercises[nextIdx];
+        showToast(`➡️ Siguiente: ${name}`);
+        startTimer(name, series, work, rest, nextIdx);
+        renderEntrenar();
+    } else {
+        document.getElementById("timerOverlay").classList.remove("visible");
+        renderEntrenar();
+        showToast("🎉 ¡Día completado!");
+        timerState = null;
+    }
+}
+function skipTimer() { if (timerState) finishExercise(); }
+function closeTimer() { clearInterval(timer); document.getElementById("timerOverlay").classList.remove("visible"); timerState=null; }
+function pauseTimer() { paused = !paused; document.getElementById("pauseBtn").textContent = paused ? "Reanudar" : "Pausar"; }
+function showToast(msg) {
+    let t = document.createElement("div");
+    t.className = "next-toast";
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.remove(), 1500);
+}
+// Estilo del toast
+let style = document.createElement("style");
+style.textContent = `.next-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:8px 16px;border-radius:30px;font-size:0.8rem;z-index:1001;animation:fadeOut 1.5s forwards}@keyframes fadeOut{0%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateX(-50%) translateY(-20px)}}`;
+document.head.appendChild(style);
+
+loadState();
+renderEntrenar();
+
+// Exponer funciones globales
+window.showPage = showPage;
+window.changeWeek = changeWeek;
+window.changeDay = changeDay;
+window.goWeek = goWeek;
+window.toggleEx = toggleEx;
+window.toggleDone = toggleDone;
+window.markCinta = markCinta;
+window.startTimer = startTimer;
+window.skipTimer = skipTimer;
+window.closeTimer = closeTimer;
+window.pauseTimer = pauseTimer;
+window.testSound = testSound;
+</script>
+</body>
+</html>
